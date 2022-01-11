@@ -9,7 +9,6 @@ from alembic import op
 from sqlalchemy.sql import table, column
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision = '94e835e8242f'
 down_revision = 'd7cf4089d422'
@@ -18,7 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
+    exercise_table = op.create_table(
         'exercises',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.String),
@@ -27,7 +26,7 @@ def upgrade():
         sa.Column('secondaryMuscles', sa.ARRAY(sa.String))
     )
 
-    op.bulk_insert('exercises',
+    op.bulk_insert(exercise_table,
         [
             {
             "id": 0,
