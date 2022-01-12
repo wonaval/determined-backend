@@ -26,6 +26,7 @@ def upgrade():
         sa.Column('secondaryMuscles', sa.ARRAY(sa.String))
     )
 
+    # Bulk insert from Exercise DB - https://github.com/wrkout/exercises.json
     op.bulk_insert(exercise_table,
         [
             {
