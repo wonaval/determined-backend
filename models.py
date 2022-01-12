@@ -1,5 +1,4 @@
-from sqlalchemy.sql.schema import ForeignKey
-from flask_academy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 class User(db.Model):
@@ -16,7 +15,6 @@ class User(db.Model):
 
   def to_json(self):
     return {
-      'id' : self.id,
       'name' : self.name,
       'username' : self.username,
       'email' : self.email
@@ -47,43 +45,39 @@ class Routine(db.Model):
   __tablename__ = 'routines'
 
   id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String)
+  name = db.Column(db.String, unique=True)
   type = db.Column(db.String)
-  sets = db.Column(db.Integer)
-  reps = db.Column(db.Integer)
-  rest = db.Column(db.Integer)
 
   # Routine associations
   user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-  exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'))
-  workout_rel = db.Relationship('Workout')
+  workout_rel = db.relationship('Workout')
 
   def to_json(self):
     return {
       'id' : self.id,
       'name' : self.name,
-      'type' : self.type,
-      'sets' : self.sets,
-      'reps' : self.reps,
-      'rest' : self.rest
+      'type' : self.type
     }
 
 class Workout(db.Model):
   __tablename__ = 'workouts'
 
   id = db.Column(db.Integer, primary_key=True)
-  date = db.Column(db.Date)
-  start_time = db.Column(db.Time)
+  sets = db.Column(db.Integer, nullable=False)
+  reps = db.Column(db.Integer, nullable=False)
+  rest = db.Column(db.Integer, nullable=False)
 
   # Workout associations
   routine_id = db.Column(db.Integer, db.ForeignKey('routines.id'))
+  exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'))
   log_rel = db.relationship('Log')
 
   def to_json(self):
     return {
       'id' : self.id,
-      'date' : self.date,
-      'start_time' : self.start_time 
+      'sets' : self.sets,
+      'reps' : self.reps,
+      'rest' : self.rest
     }
 
 class Log(db.Model):
@@ -93,11 +87,12 @@ class Log(db.Model):
   sets = db.Column(db.Integer, nullable=False)
   reps = db.Column(db.Integer, nullable=False)
   weight = db.Column(db.Integer, nullable=False)
-  exercise_time = db.Column(db.Time)
+  date = db.Column(db.Date)
+  time = db.Column(db.Time)
 
   # Log assocation
-  workout_id = db.Column(db.Integer, ForeignKey('workouts.id'))
-  exercise_id = db.Column(db.Integer, ForeignKey('exercises.id'))
+  workout_id = db.Column(db.Integer, db.ForeignKey('workouts.id'))
+  exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'))
 
   def to_json(self):
     return {
@@ -105,5 +100,6 @@ class Log(db.Model):
       'sets' : self.sets,
       'reps' : self.reps,
       'weight' : self.weight,
-      'exercise_time' : self.exercise_time
+      'date' : self.date,
+      'time' : self.time
     }

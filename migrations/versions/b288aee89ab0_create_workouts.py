@@ -20,9 +20,11 @@ def upgrade():
     op.create_table(
         'workouts',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('date', sa.Date),
-        sa.Column('start_time', sa.Time),
-        sa.Column('routine_id', sa.Integer)
+        sa.Column('sets', sa.Integer, nullable=False),
+        sa.Column('reps', sa.Integer, nullable=False),
+        sa.Column('rest', sa.Integer, nullable=False),
+        sa.Column('routine_id', sa.Integer),
+        sa.Column('exercise_id', sa.Integer)
     )
 
 

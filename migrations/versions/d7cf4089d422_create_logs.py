@@ -24,7 +24,8 @@ def upgrade():
         sa.Column('sets', sa.Integer, nullable=False),
         sa.Column('reps', sa.Integer, nullable=False),
         sa.Column('weight', sa.Integer, nullable=False),
-        sa.Column('exercise_time', sa.Time),
+        sa.Column('date', sa.Date),
+        sa.Column('time', sa.Time),
         sa.Column('workout_id', sa.Integer), 
         sa.Column('exercise_id', sa.Integer)
     )
