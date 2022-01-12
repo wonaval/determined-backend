@@ -30,8 +30,8 @@ class Exercise(db.Model):
   secondaryMuscles = db.Column(db.ARRAY(db.String))
 
   # Exercise associations
-  routine_rel = db.relationship('Routine')
-  log_re = db.relationship('Log')
+  workout_rel = db.relationship('Workout')
+  entry_rel = db.relationship('Entry')
 
   def to_json(self):
     return {
@@ -77,21 +77,37 @@ class Workout(db.Model):
       'id' : self.id,
       'sets' : self.sets,
       'reps' : self.reps,
-      'rest' : self.rest
+      'rest' : self.rest,
+      'exercise_id' : self.exercise_id
     }
 
 class Log(db.Model):
   __tablename__ = 'logs'
 
   id = db.Column(db.Integer, primary_key=True)
+  date = db.Column(db.Date)
+
+  # Log assocations
+  workout_id = db.Column(db.Integer, db.ForeignKey('workouts.id'))
+  entry_rel = db.relationship('Entry')
+
+  def to_json(self):
+    return {
+      'id' : self.id,
+      'date' : self.date,
+      # 'time' : self.time
+    }
+
+class Entry(db.Model):
+  __tablename__ = 'entries'
+
+  id = db.Column(db.Integer, primary_key=True)
   sets = db.Column(db.Integer, nullable=False)
   reps = db.Column(db.Integer, nullable=False)
   weight = db.Column(db.Integer, nullable=False)
-  date = db.Column(db.Date)
-  time = db.Column(db.Time)
 
-  # Log assocation
-  workout_id = db.Column(db.Integer, db.ForeignKey('workouts.id'))
+  # Entry assocations
+  log_id = db.Column(db.Integer, db.ForeignKey('logs.id'))
   exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'))
 
   def to_json(self):
@@ -99,7 +115,5 @@ class Log(db.Model):
       'id' : self.id,
       'sets' : self.sets,
       'reps' : self.reps,
-      'weight' : self.weight,
-      'date' : self.date,
-      'time' : self.time
+      'weight' : self.weight
     }

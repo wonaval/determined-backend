@@ -21,13 +21,9 @@ def upgrade():
     op.create_table(
         'logs',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('sets', sa.Integer, nullable=False),
-        sa.Column('reps', sa.Integer, nullable=False),
-        sa.Column('weight', sa.Integer, nullable=False),
         sa.Column('date', sa.Date),
-        sa.Column('time', sa.Time),
         sa.Column('workout_id', sa.Integer), 
-        sa.Column('exercise_id', sa.Integer)
+        sa.Column('entry_id', sa.Integer)
     )
 
 

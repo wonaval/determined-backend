@@ -1,4 +1,5 @@
 import os
+import datetime
 from flask import Flask, request
 from flask_cors import CORS
 import sqlalchemy
@@ -21,22 +22,22 @@ models.db.init_app(app)
 # Create user - POST - /user - Tested? OK
 def create_user():
   hashed_pw = bcrypt.generate_password_hash(request.json['password']).decode('utf-8')
-  try:
-    user = models.User(
-      name=request.json['name'],
-      username=request.json['username'],
-      email=request.json['email'],
-      password=hashed_pw
-    )
-    models.db.session.add(user)
-    models.db.session.commit()
-    encrypted_id = jwt.encode({'user_id' : user.id}, os.environ.get('JWT_SECRET'), algorithm='HS256')
-    return {
-      'user' : user.to_json(),
-      'user_id' : encrypted_id
-    }
-  except:
-    return { 'message' : 'Email must be present and unique' }, 400
+  # try:
+  user = models.User(
+    name=request.json['name'],
+    username=request.json['username'],
+    email=request.json['email'],
+    password=hashed_pw
+  )
+  models.db.session.add(user)
+  models.db.session.commit()
+  encrypted_id = jwt.encode({'user_id' : user.id}, os.environ.get('JWT_SECRET'), algorithm='HS256')
+  return {
+    'user' : user.to_json(),
+    'user_id' : encrypted_id
+  }
+  # except:
+  #   return { 'message' : 'Email must be present and unique' }, 400
 app.route('/user', methods=['POST'])(create_user)
 
 # Verify user - GET - /user/verify - Tested? OK
@@ -93,10 +94,6 @@ def routine_func():
     routine = models.Routine(
       name = request.json['name'],
       type = request.json['type'],
-      sets = request.json['sets'],
-      reps = request.json['reps'],
-      rest = request.json['rest'],
-      exercise_id = request.json['exercise_id'],
       user_id = decypted_id
     )
     models.db.session.add(routine)
@@ -107,32 +104,132 @@ def routine_func():
     return {'routine' : [r.to_json() for r in routines]}
 app.route('/routine', methods=['POST', 'GET'])(routine_func)
 
-# Get routine info - GET - /routine/:routine_id - Tested?
-# Update routine info - PUT - /routine/:routine_id - Tested?
-# Delete routine - DELETE - /routine/:routine_id - Tested?
+# Get all exercises for routine - GET - /routine/:routine_id - Tested? OK
+# Update routine info - PUT - /routine/:routine_id - Tested? OK
+# Delete routine - DELETE - /routine/:routine_id - Tested? OK
 def routine_id_func(routine_id):
+  routine = models.Routine.query.filter_by(id=routine_id).first()
   if request.method == 'GET':
-    pass
+    workouts = models.Workout.query.filter_by(routine_id=routine_id).all()
+    return {
+      'routine' : routine.to_json(),
+      'workout' : [w.to_json() for w in workouts]
+      }
   elif request.method == 'PUT':
-    pass
+    routine.name = request.json['name']
+    routine.type = request.json['type']
+    models.db.session.add(routine)
+    models.db.session.commit()
+    return {'routine' : routine.to_json()}
   elif request.method == 'DELETE':
-    routine = 
-  return 'OK'
+    models.db.session.delete(routine)
+    models.db.session.commit()
+    return {'message':'Routine deleted'}
 app.route('/routine/<int:routine_id>', methods=['GET', 'PUT', 'DELETE'])(routine_id_func)
 
 # --- WORKOUT ROUTES ---
-# Create workout log - POST - /workout - Tested?
-# Get all workout logs - GET - /workout - Tested?
-# NOTE: Do I actually need this route?
+# Add exercises to routine - POST - /workout - Tested? OK
+def workout_func():
+  if request.method == 'POST':
+    workout = models.Workout(
+      sets = request.json['sets'],
+      reps = request.json['reps'],
+      rest = request.json['rest'],
+      routine_id = request.json['routine_id'],
+      exercise_id = request.json['exercise_id']
+    )
+    models.db.session.add(workout)
+    models.db.session.commit()
+    return {'workout' : workout.to_json()}
+app.route('/workout', methods=['POST'])(workout_func)
 
-# Get individual workout log - GET - /workout/:workout_id - Tested?
-# Delete workout log - DELETE - /workout/:workout_id - Tested?
+# Get all logs for workout - GET - /log - Tested? OK
+# Update target sets/reps - PUT - /workout/:workout_id - Tested? OK
+# Delete target sets/reps - DELETE  - /workout/:workout_id - Tested? OK
+def workout_id_func(workout_id):
+  workout = models.Workout.query.filter_by(id=workout_id).first()
+  if request.method == 'GET':
+    logs = models.Log.query.filter_by(workout_id=workout_id).all()
+    return {
+      'workout' : workout.to_json(),
+      'log' : [l.to_json() for l in logs]
+      }
+  elif request.method == 'PUT':
+    workout.sets = request.json['sets']
+    workout.reps = request.json['reps']
+    workout.rest = request.json['rest']
+    models.db.session.add(workout)
+    models.db.session.commit()
+    return {'workout' : workout.to_json()}
+  elif request.method == 'DELETE':
+    models.db.session.delete(workout)
+    models.db.session.commit()
+    return {'message':'Workout deleted'}
+app.route('/workout/<int:workout_id>', methods=['GET', 'PUT', 'DELETE'])(workout_id_func)
 
-# Create log under workout - POST - /workout/:workout_id/log - Tested?
-# Get all logs under workout - GET - /workout/:workout_id/log - Tested?
 
-# Update log under workout - PUT - /workout/:workout_id/log/:log_id - Tested?
-# Delete log under workout - DELETE - /workout/:workout_id/log/:log_id - Tested?
+# --- LOG ROUTES ---
+# Create log - POST - /log - Tested?
+def log_func():
+    log = models.Log(
+      date = datetime.datetime.now().date(),
+      # time = datetime.datetime.now().time(),
+      workout_id = request.json['workout_id']
+    )
+    models.db.session.add(log)
+    models.db.session.commit()
+    return {'log' : log.to_json()}
+app.route('/log', methods=['POST'])(log_func)
+
+# Get all entries for log - GET - /log/:log_id - Tested?
+# Delete log - DELETE - /log/:log_id - Tested?
+def log_id_func(log_id):
+  log = models.Log.query.filter_by(id=log_id).first()
+  if request.method == 'GET':
+    entries = models.Entry.query.filter_by(log_id=log_id).all()
+    return {
+      'log' : log.to_json(),
+      'entry' : [e.to_json() for e in entries]
+    }
+  elif request.method == 'DELETE':
+    models.db.session.delete(log)
+    models.db.session.commit()
+    return {'message' : 'Log deleted'}
+app.route('/log/<int:log_id>', methods=['GET', 'DELETE'])(log_id_func)
+
+# --- ENTRY ROUTES ---
+# Create entry - POST - /entry - Tested?
+def entry_func():
+  entry = models.Entry(
+    sets = request.json['sets'],
+    reps = request.json['reps'],
+    weight = request.json['weight'],
+    exercise_id = request.json['exercise_id'],
+    log_id = request.json['log_id']
+  )
+  models.db.session.add(entry)
+  models.db.session.commit()
+  return {'entry' : entry.to_json()}
+app.route('/entry', methods=['POST'])(entry_func)
+
+# Update entry - PUT - /entry/:entry_id - Tested? OK
+# Delete entry - DELETE - /entry/:entry_id - Tested? OK
+def entry_id_func(entry_id):
+  entry = models.Entry.query.filter_by(id=entry_id).first()
+  if request.method == 'PUT':
+    entry.sets = request.json['sets']
+    entry.reps = request.json['reps']
+    entry.weight = request.json['weight']
+    models.db.session.add(entry)
+    models.db.session.commit()
+    return {
+      'entry' : entry.to_json()
+      }
+  elif request.method == 'DELETE':
+    models.db.session.delete(entry)
+    models.db.session.commit()
+    return {'message' : 'Entry deleted'}
+app.route('/entry/<int:entry_id>', methods=['PUT', 'DELETE'])(entry_id_func)
 
 # --- MISC ROUTES ---
 # Test the database works at all - GET - /db_test - Tested? OK
@@ -160,3 +257,19 @@ app.route('/exercise', methods=['GET'])(get_exercises)
 if __name__ == '__main__':
   port = int(os.environ.get('PORT', 5000))
   app.run(host='0.0.0.0', port=port, debug=True)
+
+  {
+    "name" : "TEST Name",
+    "username" : "TEST Username",
+    "email" : "test@test.com",
+    "password" : "123",
+    "type" : "TEST Type",
+    "sets" : 1,
+    "reps" : 1,
+    "rest" : 1,
+    "weight" : 1,
+    "routine_id" : 1,
+    "exercise_id" : 1,
+    "workout_id" : 2,
+    "log_id": 1
+}
