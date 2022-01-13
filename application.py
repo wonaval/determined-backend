@@ -78,9 +78,10 @@ def user_func():
     models.db.session.commit()
     return {'user' : user.to_json()}
   elif request.method == 'DELETE':
-    models.db.session.delete(user)
-    models.db.session.commit()
-    return {'message' : 'User deleted'}
+    if bcrypt.check_password_hash(user.password, request.json['password']):
+      models.db.session.delete(user)
+      models.db.session.commit()
+      return {'message' : 'User deleted'}
 app.route('/user', methods=['PUT', 'DELETE'])(user_func)
 
 
