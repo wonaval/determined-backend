@@ -25,7 +25,8 @@ def upgrade():
         sa.Column('reps', sa.Integer, nullable=False),
         sa.Column('weight', sa.Integer, nullable=False),
         sa.Column('log_id', sa.Integer),
-        sa.Column('exercise_id', sa.Integer)
+        sa.Column('exercise_id', sa.Integer),
+        sa.Column('name', sa.String)
     )
 
 def downgrade():

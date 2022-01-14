@@ -76,12 +76,18 @@ def user_func():
     user.email = request.json['email']
     models.db.session.add(user)
     models.db.session.commit()
-    return {'user' : user.to_json()}
+    encrypted_id = jwt.encode({'user_id' : user.id}, os.environ.get('JWT_SECRET'), algorithm='HS256')
+    return {
+      'user' : user.to_json(),
+      'user_id' : encrypted_id
+      }
   elif request.method == 'DELETE':
     if bcrypt.check_password_hash(user.password, request.json['password']):
       models.db.session.delete(user)
       models.db.session.commit()
       return {'message' : 'User deleted'}
+    else:
+      return {'message' : 'Password is incorrect'}
 app.route('/user', methods=['PUT', 'DELETE'])(user_func)
 
 
@@ -94,7 +100,6 @@ def routine_func():
   if request.method == 'POST':
     routine = models.Routine(
       name = request.json['name'],
-      type = request.json['type'],
       user_id = decypted_id
     )
     models.db.session.add(routine)
@@ -137,7 +142,7 @@ def workout_func():
       reps = request.json['reps'],
       rest = request.json['rest'],
       routine_id = request.json['routine_id'],
-      exercise_id = request.json['exercise_id']
+      name = request.json['name']
     )
     models.db.session.add(workout)
     models.db.session.commit()
@@ -174,8 +179,7 @@ app.route('/workout/<int:workout_id>', methods=['GET', 'PUT', 'DELETE'])(workout
 def log_func():
     log = models.Log(
       date = datetime.datetime.now().date(),
-      # time = datetime.datetime.now().time(),
-      workout_id = request.json['workout_id']
+      name = request.json['name']
     )
     models.db.session.add(log)
     models.db.session.commit()
@@ -199,13 +203,12 @@ def log_id_func(log_id):
 app.route('/log/<int:log_id>', methods=['GET', 'DELETE'])(log_id_func)
 
 # --- ENTRY ROUTES ---
-# Create entry - POST - /entry - Tested?
+# Create entry - POST - /entry - Tested? OK
 def entry_func():
   entry = models.Entry(
     sets = request.json['sets'],
     reps = request.json['reps'],
     weight = request.json['weight'],
-    exercise_id = request.json['exercise_id'],
     log_id = request.json['log_id']
   )
   models.db.session.add(entry)
@@ -233,7 +236,7 @@ def entry_id_func(entry_id):
 app.route('/entry/<int:entry_id>', methods=['PUT', 'DELETE'])(entry_id_func)
 
 # --- MISC ROUTES ---
-# Test the database works at all - GET - /db_test - Tested? OK
+# Seeds the databases - GET - /db_test - Tested? OK
 def db_test():
   test1 = models.User(
     name='Test NAME',

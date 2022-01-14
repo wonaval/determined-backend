@@ -23,6 +23,7 @@ def upgrade():
         sa.Column('sets', sa.Integer, nullable=False),
         sa.Column('reps', sa.Integer, nullable=False),
         sa.Column('rest', sa.Integer, nullable=False),
+        sa.Column('name', sa.String),
         sa.Column('routine_id', sa.Integer),
         sa.Column('exercise_id', sa.Integer)
     )
