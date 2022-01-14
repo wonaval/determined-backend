@@ -22,7 +22,8 @@ def upgrade():
         'logs',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('date', sa.Date),
-        sa.Column('name', sa.String)
+        sa.Column('name', sa.String),
+        sa.Column('user_id', sa.Integer)
     )
 
 

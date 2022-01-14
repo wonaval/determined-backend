@@ -12,6 +12,7 @@ class User(db.Model):
 
   # User associations
   routine_rel = db.relationship('Routine')
+  log_rel = db.relationship('Log')
 
   def to_json(self):
     return {
@@ -91,12 +92,14 @@ class Log(db.Model):
 
   # Log assocations
   entry_rel = db.relationship('Entry')
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
   def to_json(self):
     return {
       'id' : self.id,
       'date' : self.date,
-      'name' : self.name
+      'name' : self.name,
+      'user_id' : self.user_id
     }
 
 class Entry(db.Model):

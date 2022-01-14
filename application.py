@@ -176,15 +176,22 @@ app.route('/workout/<int:workout_id>', methods=['GET', 'PUT', 'DELETE'])(workout
 
 # --- LOG ROUTES ---
 # Create log - POST - /log - Tested?
+# Get all logs - GET - /log - Tested? 
 def log_func():
+  decypted_id = jwt.decode(request.headers['Authorization'], os.environ.get('JWT_SECRET'), algorithms=['HS256'])['user_id']
+  if request.method == 'POST':
     log = models.Log(
       date = datetime.datetime.now().date(),
-      name = request.json['name']
+      name = request.json['name'],
+      user_id = decypted_id
     )
     models.db.session.add(log)
     models.db.session.commit()
     return {'log' : log.to_json()}
-app.route('/log', methods=['POST'])(log_func)
+  elif request.method == 'GET':
+    logs = models.Log.query.filter_by(user_id=decypted_id).all()
+    return {'log': [l.to_json() for l in logs]}
+app.route('/log', methods=['POST', 'GET'])(log_func)
 
 # Get all entries for log - GET - /log/:log_id - Tested?
 # Delete log - DELETE - /log/:log_id - Tested?
@@ -209,7 +216,8 @@ def entry_func():
     sets = request.json['sets'],
     reps = request.json['reps'],
     weight = request.json['weight'],
-    log_id = request.json['log_id']
+    log_id = request.json['log_id'],
+    name = request.json['name']
   )
   models.db.session.add(entry)
   models.db.session.commit()
