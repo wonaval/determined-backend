@@ -23,7 +23,7 @@ def upgrade():
     op.create_table(
         'routines',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('name', sa.String, unique=True, nullable=False),
+        sa.Column('name', sa.String, nullable=False),
         sa.Column('type', sa.String),
         sa.Column('user_id', sa.Integer),
 
